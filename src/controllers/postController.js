@@ -31,7 +31,7 @@ module.exports.getPostById = async (req, res) => {
 
 module.exports.getUserPost = async (req, res) => {
   try {
-    const post = await new Post({ userId: req.user.id }).getUserPost();
+    const post = await new Post({ userId: req.params.userId }).getUserPost();
     return success(res, { post });
   } catch (err) {
     return error(res, { code: err.code, message: err.message });
@@ -43,7 +43,8 @@ module.exports.updatePost = async (req, res) => {
     const userId = req.user.id,
       postId = req.query.postId;
     const post = await new Post({ userId, postId, ...req.body }).updatePost();
-    return success(res, { post });
+   if (post) return success(res, { post });
+    return error(res, { code: 400, message: "Access Denied You Can't Edit This Post"});
   } catch (err) {
     return error(res, { code: err.code, message: err.message });
   }
@@ -54,7 +55,8 @@ module.exports.deletePost = async (req, res) => {
     const userId = req.user.id,
       postId = req.query.postId;
     const post = await new Post({ userId, postId }).deletePost();
-    return success(res, { post });
+   if (post) return success(res, { post });
+   return error(res, { code: 400, message: "Access Denied You Can't Delete This Post" });
   } catch (err) {
     return error(res, { code: err.code, message: err.message });
   }
