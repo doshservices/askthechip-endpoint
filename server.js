@@ -28,7 +28,6 @@ const comment = require('./src/router/commentRoute');
 const { flutterResponse } = require('./src/integrations/flutterwave');
 const mentorshipModel = require('./src/models/mentorshipModel');
 const { BOOKING_STATUS } = require('./src/utils/constants');
-const { dirname } = require('path');
 
 app.use('/api/', user)
 app.use('/api/', comment)
