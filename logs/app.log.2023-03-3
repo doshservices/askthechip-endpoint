@@ -1,2 +1,11 @@
 {"level":"info","message":"Database connection successful!"}
 {"level":"info","message":"Booking Backend Service Started on port 7000"}
+<<<<<<< HEAD
+=======
+{"level":"info","message":"Database connection successful!"}
+{"level":"info","message":"Booking Backend Service Started on port 7000"}
+>>>>>>> 2fa10f8 (bug fixs on socket)
+{"level":"info","message":"Database connection successful!"}
+{"level":"info","message":"Booking Backend Service Started on port 7000"}
+{"level":"info","message":"Database connection successful!"}
+{"level":"info","message":"Booking Backend Service Started on port 7000"}
