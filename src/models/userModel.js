@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const validator = require("validator");
 const uniqueValidator = require("mongoose-unique-validator");
 const { throwError } = require("../utils/handleErrors");
-const { GENDER, USER_TYPE, SERVICE_TYPE } = require("../utils/constants");
+const { GENDER, USER_TYPE, SERVICE_TYPE, SUBSCRITION_STATUS } = require("../utils/constants");
 
 
 const Schema = new mongoose.Schema({
@@ -89,6 +89,11 @@ const Schema = new mongoose.Schema({
   followers: {
     type: Array,
     default: []
+  },
+  subscribed: {
+    type: String,
+    enum: Object.keys(SUBSCRITION_STATUS),
+    default: SUBSCRITION_STATUS.PENDING
   }
 })
 

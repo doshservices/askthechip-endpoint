@@ -8,11 +8,10 @@ const {
   isCastError,
 } = require("../utils/handleErrors");
 const { error } = require("../utils/baseController");
-const { USER_TYPE, ADMIN_ROLES } = require("../utils/constants");
+const { USER_TYPE, ADMIN_ROLES, SUBSCRITION_STATUS } = require("../utils/constants");
 
 // Generate Authorization Token
 async function generateAuthToken(payload) {
-  console.log(JWT_SECRETE_KEY);
   return jwt.sign(
     payload,
     JWT_SECRETE_KEY,
@@ -26,7 +25,7 @@ const authenticate = async (req, res, next) => {
     const jwtPayload = decodeJwtToken(req);
     const user = await getUserPayload(jwtPayload);
     req.token = jwtPayload.token;
-
+    req.email = jwtPayload.email
     req.user = user;
     next();
   } catch (e) {
@@ -54,12 +53,10 @@ function decodeJwtToken(req) {
 }
 
 function verifyToken(token) {
-  console.log(JWT_SECRETE_KEY);
   return jwt.verify(token, JWT_SECRETE_KEY);
 }
 
 async function getUserPayload(payload) {
-  console.log({payload});
   const userId = payload.id;
   return getUsersPayload(userId);
 }
@@ -89,10 +86,7 @@ function permit(roles) {
   };
 }
 // Permission for only superAdmin
-function permitSuperAdmin(role) {
-  return (req, res, next) => {
-    console.log(role);
-    // const isAuthorized = role.includes(req.user.role);
+function permitSuperAdmin(req, res, next) {
     if (req.user.role !== ADMIN_ROLES.SUPER_ADMIN) {
       return error(res, {
         code: 403,
@@ -102,22 +96,19 @@ function permitSuperAdmin(role) {
 
     next();
   };
-}
-function isAllowed(users) {
-  return (req, res, next) => {
-    const isAuthorized = users.includes(req.user.verified);
 
-    if (!isAuthorized) {
+function isAllowed(req, res, next) {
+    if (req.user.subcribed !== SUBSCRITION_STATUS.SUCCESS) {
       return error(res, {
         code: 403,
         message:
-          "You are not a verified user yet. Please contact the Administrator for further directives",
+          "You are not a subcribed user yet. Please subcribe to access all services",
       });
     }
 
     next();
   };
-}
+
 
 function restrict(users) {
   return (req, res, next) => {

@@ -1,8 +1,12 @@
 const userSchema = require("../models/userModel");
-const { sendEmailToken } = require("../utils/sendgrid");
+const { sendEmailToken, mentorshipEmail } = require("../utils/sendgrid");
 const { throwError } = require("../utils/handleErrors");
 const { USER_TYPE } = require("../utils/constants");
 const { validateParameters } = require("../utils/util");
+const bcrypt = require("bcrypt");
+const mentorshipModel = require("../models/mentorshipModel");
+const { findOne } = require("../models/userModel");
+const { initiatePaymentFlutterwave } = require("../integrations/flutterwave");
 
 class User {
   constructor(data) {
@@ -10,7 +14,7 @@ class User {
     this.errors = [];
   }
 
-  async emailExist(email) {
+  async emailExist() {
     const user = await userSchema.findOne({ email: this.data.email });
     if (user) {
       this.errors.push("Email already taken");
@@ -68,13 +72,11 @@ class User {
 
   async getUserById() {
     const { userId } = this.data;
-    console.log({ userId });
     return await userSchema.findOne({ _id: userId }).exec();
   }
 
   async verifyUser() {
     const { otp, userId } = this.data;
-    console.log({ otp });
     const user = await userSchema.findOne({ _id: userId });
     if (otp === user.otp) {
       if (user.role === USER_TYPE.USER) {
@@ -93,7 +95,6 @@ class User {
   async followUser() {
     const { userId, followerId } = this.data;
     const findUser = await userSchema.findByIdAndUpdate({ _id: userId });
-    console.log(findUser.followers);
     findUser.followers.push(followerId);
     return await findUser.save();
   }
@@ -103,20 +104,82 @@ class User {
     const findUser = await userSchema.findByIdAndUpdate({ _id: userId });
 
     for (let i = 0; i < findUser.followers.length; i++) {
-      // console.log(findUser.followers[i].toString());
       if (findUser.followers[i].toString() === followerId.toString()) {
         const index = findUser.followers[i];
-       
-        console.log(index);
-          // only splice array when item is found
-          findUser.followers.splice(index, 1); // 2nd parameter means remove one item only
-        
 
-        // array = [2, 9]
-        console.log(findUser.followers);
+        // only splice array when item is found
+        findUser.followers.splice(index, 1); // 2nd parameter means remove one item only
       }
     }
     return await findUser.save();
+  }
+
+  async sendOtp() {
+    const { email } = this.data;
+    const verificationCode = Math.floor(100000 + Math.random() * 100000);
+
+    const user = await userSchema.findOne({ email });
+    if (user) {
+      user.otp = verificationCode;
+      await sendEmailToken(email, verificationCode);
+    }
+    return "OTP SENT!";
+  }
+
+  async ResetPassword() {
+    const { loginId, newPassword, oldPassword } = this.data;
+    const ComfirmPassword = await userSchema.findByCredentials(
+      loginId,
+      oldPassword
+    );
+    if (ComfirmPassword) {
+      const hashed = await bcrypt.hash(newPassword, 10);
+      const user = await userSchema.findOneAndUpdate(
+        { email: loginId },
+        { token: null, password: hashed },
+        { new: true }
+      );
+      return await user.save();
+    }
+  }
+
+  async forgotPassword() {
+    const { loginId, otp, newPassword } = this.data;
+    const user = await userSchema.findOne({ email: loginId });
+    if (user.otp === otp) {
+      user.password = await bcrypt.hash(newPassword, 10);
+      return await user.save();
+    }
+  }
+
+  async requestMentorship() {
+    const uniqueId = "M_UQ-" + Math.floor(100000 + Math.random() * 100000);
+    const { email, phoneNumber, industry, others } = this.data;
+    const user = await userSchema.findOne({ email });
+    const mentorship = await new mentorshipModel({
+      email,
+      phoneNumber,
+      industry,
+      uniqueId,
+      others,
+    }).save();
+    // await mentorshipEmail(user.firstName, email, industry, uniqueId);
+    return mentorship;
+  }
+
+  
+
+  async subscribeUser() {
+    const { email, userId } = this.data;
+    const user = await userSchema.findOne({ email });
+
+    return await initiatePaymentFlutterwave(
+      2500,
+      user.email,
+      user.phoneNumber,
+      user.firstName,
+      userId
+    );
   }
 }
 

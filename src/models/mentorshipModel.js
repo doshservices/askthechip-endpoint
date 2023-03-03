@@ -1,5 +1,5 @@
 const {Schema, model} = require('mongoose')
-const { BOARD_TYPE } = require('../utils/constants')
+const { BOOKING_STATUS } = require('../utils/constants')
 
 const mentorshipSchema = new Schema({
     industry: {
@@ -17,7 +17,21 @@ const mentorshipSchema = new Schema({
     others: {
         type: String,
     },  
+  status: {
+    type: String,
+    enum: Object.keys(BOOKING_STATUS),
+    default: BOOKING_STATUS.PENDING,
+    require: true
+  },
+  uniqueId: {
+    type: String,
+    require: true
+  },
+  createAt: {
+    type: Date,
+    default: Date.now()
+  }
 })
 
-const mentorshipModel = model('post', mentorshipSchema)
+const mentorshipModel = model('mentorship', mentorshipSchema)
 module.exports = mentorshipModel

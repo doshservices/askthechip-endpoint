@@ -29,12 +29,25 @@ class Comment {
     if (comment) return comment;
   }
 
-  async deleteComment() {
-    const { commentId, userId } = this.data;
+  async updateComment() {
+    const { commentId, userId, content } = this.data;
+    const findComment = await commentModel.findOne({_id: commentId})
+   if (findComment.userId === userId) {
     const comment = await commentModel
-      .find({ _id: commentId })
-      .populate("userId");
+    .updateOne({ _id: commentId }, {content})
+  if (comment) return comment;
+   }
+  }
+
+  async deleteComment () {
+    const { commentId, userId } = this.data;
+    const Findercomment = await commentModel
+    .findOne({ _id: commentId })
+    if ( Findercomment.userId.toString() === userId) {
+    const comment = await commentModel
+      .deleteOne({ _id: commentId })
     if (comment) return comment;
+  }
   }
 }
 
